@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# editor tmp files
+*.kate-swp
+
 # C extensions
 *.so
 

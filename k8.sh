@@ -127,7 +127,7 @@ helm install openebs --namespace openebs openebs/openebs --create-namespace
 
 ### openebs lvm storage
 sudo truncate -s 1024G /var/openebs/lvmvg.img
-vgcreate lvmvg $(losetup -f /var/openebs/lvmvg.img --show)
+sudo bash -c 'vgcreate lvmvg $(losetup -f /var/openebs/lvmvg.img --show)'
 cat <<EOF | sudo tee /etc/systemd/system/openebs-lvmvg.service
 [Unit]
 Description=Setup openebs lvmvg loop device
