@@ -1,8 +1,9 @@
 NET_DOMAIN="localdomain"
+NET_API_HOSTNAME="api"
 NET_API_IP=$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"src") print $(nn+1) }' | cut -d '.' -f1-3).10
 NET_API_IF=$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"dev") print $(nn+1) }')
 
-### configure dynamic VIP for k8 api with systemd
+### configure dynamic VIP for k8 api with systemd (good lazy solution)
 cat <<EOF | sudo tee /etc/systemd/system/k8vip.service
 [Unit]
 Description=Setup k8 virtual IP
@@ -22,15 +23,15 @@ Also=systemd-udevd.service
 EOF
 sudo systemctl daemon-reload
 sudo systemctl enable --now k8vip.service
-echo "${NET_API_IP} api.${NET_DOMAIN} api" | sudo tee -a /etc/hosts
+echo "${NET_API_IP} ${NET_API_HOSTNAME}.${NET_DOMAIN} ${NET_API_HOSTNAME}" | sudo tee -a /etc/hosts
 
-### configure static VIP for k8 api with network manager
-nmcli con add con-name "k8vip" \
-    type ethernet \
-    ifname ${NET_API_IF} \
-    ipv4.address ${NET_API_LB}/32 \
-    ipv4.method manual \
-    connection.autoconnect yes
+### or configure static VIP for k8 api with network manager (fairly blah solution)
+#nmcli con add con-name "k8vip" \
+#    type ethernet \
+#    ifname ${NET_API_IF} \
+#    ipv4.address ${NET_API_LB}/32 \
+#    ipv4.method manual \
+#    connection.autoconnect yes
 
 ### configure host
 sudo apt-get update
@@ -98,7 +99,8 @@ sudo crictl config --set pull-image-on-create=true
 ### initialize control plane
 sudo kubeadm config images pull
 #sudo kubeadm init --pod-network-cidr=10.244.0.0/16
-sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=${NET_API_IP} --apiserver-cert-extra-sans=api,api.${NET_DOMAIN}
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address=${NET_API_IP} \
+  --apiserver-cert-extra-sans=${NET_API_HOSTNAME},${NET_API_HOSTNAME}.${NET_DOMAIN}
 
 ### configure access
 mkdir -p $HOME/.kube
