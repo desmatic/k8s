@@ -114,6 +114,7 @@ kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule-
 
 ### install network plugin
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+#kubectl apply -f https://projectcalico.docs.tigera.io/manifests/calico.yam
 
 ### install helm
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -155,6 +156,50 @@ sudo systemctl enable openebs-lvmvg.service
 sudo vgdisplay -v lvmvg
 kubectl apply -f https://openebs.github.io/charts/lvm-operator.yaml
 kubectl get pods -n kube-system -l role=openebs-lvm
+cat <<EOF | kubectl apply -f -
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: openebs-lvmpv
+parameters:
+  storage: "lvm"
+  volgroup: "lvmvg"
+provisioner: local.csi.openebs.io
+EOF
+cat <<EOF | kubectl apply -f -
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: csi-lvmpv
+spec:
+  storageClassName: openebs-lvmpv
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 16Gi
+EOF
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Pod
+metadata:
+  name: fio
+spec:
+  restartPolicy: Never
+  containers:
+  - name: perfrunner
+    image: openebs/tests-fio
+    command: ["/bin/bash"]
+    args: ["-c", "sleep infinity"]
+    volumeMounts:
+       - mountPath: /datadir
+         name: fio-vol
+    tty: true
+  volumes:
+  - name: fio-vol
+    persistentVolumeClaim:
+      claimName: csi-lvmpv
+EOF
 
 ### ui dashboard
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
@@ -179,7 +224,24 @@ subjects:
   name: admin-user
   namespace: kubernetes-dashboard
 EOF
+mkdir -p ~/.config/systemd/user/
+cat <<EOF | tee ~/.config/systemd/user/kube-proxy.service
+[Unit]
+Description=Kubernetes Kube-Proxy Server
+Documentation=https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/
+After=network.target
+
+[Service]
+ExecStart=/usr/local/bin/kubectl proxy
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=default.target
+EOF
+#ssh -v -N appusr@appserver -J myusr@jumphost -L 6443:${NET_API_HOSTNAME}:6443
+systemctl --user enable --now kube-proxy.service
+loginctl enable-linger
+systemctl --user status --full kube-proxy.Service
 kubectl -n kubernetes-dashboard create token admin-user
-ssh -v -N appusr@appserver -J myusr@jumphost -L 6443:${NET_API_HOSTNAME}:6443
-kubectl proxy
 google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
