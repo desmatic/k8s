@@ -1,7 +1,9 @@
-NET_DOMAIN="localdomain"
-NET_API_HOSTNAME="api"
-NET_API_IP=$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"src") print $(nn+1) }' | cut -d '.' -f1-3).10
-NET_API_IF=$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"dev") print $(nn+1) }')
+set -ex
+NET_DOMAIN=${NET_DOMAIN:-"localdomain"}
+NET_HOSTNAME=${NET_HOSTNAME:-"k8-ctrl1"}
+NET_API_HOSTNAME=${NET_API_HOSTNAME:-"api"}
+NET_API_IP=${NET_API_IP:-$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"src") print $(nn+1) }' | cut -d '.' -f1-3).101}
+NET_API_IF=${NET_API_IF:-$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"dev") print $(nn+1) }')}
 
 ### configure dynamic VIP for k8 api with systemd (good lazy solution)
 cat <<EOF | sudo tee /etc/systemd/system/k8vip.service
@@ -42,7 +44,7 @@ sudo cat /etc/iscsi/initiatorname.iscsi
 systemctl status iscsid
 
 ### configure host networking
-sudo hostnamectl set-hostname k8-ctrl1
+sudo hostnamectl set-hostname ${NET_HOSTNAME}
 echo "$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"src") print $(nn+1) }') $(hostname).${NET_DOMAIN} $(hostname)" | sudo tee -a /etc/hosts
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
