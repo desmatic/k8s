@@ -227,8 +227,8 @@ EOF
 mkdir -p ~/.config/systemd/user/
 cat <<EOF | tee ~/.config/systemd/user/kube-proxy.service
 [Unit]
-Description=Kubernetes Kube-Proxy Server
-Documentation=https://kubernetes.io/docs/reference/command-line-tools-reference/kube-proxy/
+Description=Kubernetes API Proxy Server
+Documentation=https://kubernetes.io/docs/tasks/extend-kubernetes/http-proxy-access-api/
 After=network.target
 
 [Service]
