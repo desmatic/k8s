@@ -155,3 +155,31 @@ sudo systemctl enable openebs-lvmvg.service
 sudo vgdisplay -v lvmvg
 kubectl apply -f https://openebs.github.io/charts/lvm-operator.yaml
 kubectl get pods -n kube-system -l role=openebs-lvm
+
+### ui dashboard
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: admin-user
+  namespace: kubernetes-dashboard
+EOF
+cat <<EOF | kubectl apply -f -
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: admin-user
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  name: admin-user
+  namespace: kubernetes-dashboard
+EOF
+kubectl -n kubernetes-dashboard create token admin-user
+ssh -v -N appusr@appserver -J myusr@jumphost -L 6443:${NET_API_HOSTNAME}:6443
+kubectl proxy
+google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
