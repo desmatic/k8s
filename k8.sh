@@ -46,7 +46,8 @@ echo "${NET_API_IP} ${NET_API_HOSTNAME}.${NET_DOMAIN} ${NET_API_HOSTNAME}" | sud
 
 ### configure host
 sudo apt-get update
-sudo apt-get -y install jq vim git lvm2 iftop psmisc apt-transport-https ca-certificates curl open-iscsi
+sudo apt-get -y install lvm2 policykit-1 apt-transport-https ca-certificates open-iscsi \
+  vim jq curl git iftop psmisc screen tmux
 sudo update-alternatives --set editor /usr/bin/vim.basic
 sudo systemctl enable --now iscsid
 sudo cat /etc/iscsi/initiatorname.iscsi
@@ -256,7 +257,7 @@ systemctl --user enable --now kube-proxy.service
 loginctl enable-linger
 systemctl --user status --full kube-proxy.service
 kubectl -n kubernetes-dashboard create token admin-user
-google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+# google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 
 ### install kube prometheus
 git clone https://github.com/prometheus-operator/kube-prometheus.git
@@ -296,7 +297,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now grafana.service
 loginctl enable-linger
 systemctl --user status --full grafana.service
-google-chrome http://localhost:3000/ # username: admin, password: admin
+# google-chrome http://localhost:3000/ # username: admin, password: admin
 
 # access prometheus ui
 cat <<EOF | tee ~/.config/systemd/user/prometheus.service
@@ -319,7 +320,7 @@ systemctl --user daemon-reload
 systemctl --user enable --now prometheus.service
 loginctl enable-linger
 systemctl --user status --full prometheus.service
-google-chrome http://localhost:9090/
+# google-chrome http://localhost:9090/
 
 # access alert manager ui
 cat <<EOF | tee ~/.config/systemd/user/alertmanager.service
@@ -342,5 +343,5 @@ systemctl --user daemon-reload
 systemctl --user enable --now alertmanager.service
 loginctl enable-linger
 systemctl --user status --full alertmanager.service
-google-chrome http://localhost:9093
+# google-chrome http://localhost:9093
 
