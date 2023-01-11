@@ -1,11 +1,11 @@
 set -ex
 
-### UI access to k8 API
+### UI jump access to k8 API
 #
 # kube proxy runs on localhost, so for remote systems use ssh tunnels
 # ssh -v -N appusr@appserver -J myusr@jumphost -L 6443:${NET_API_HOSTNAME}:6443
 #
-###########
+###############################################################################
 
 ### environment configuration
 NET_DOMAIN=${NET_DOMAIN:-"localdomain"}
@@ -269,6 +269,11 @@ kubectl wait \
 kubectl apply -f manifests/
 cd -
 
+### install loki
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update
+helm install loki grafana/loki-stack --namespace monitoring
+
 # access grafana ui
 mkdir -p ~/.config/systemd/user/
 cat <<EOF | tee ~/.config/systemd/user/grafana.service
@@ -338,3 +343,4 @@ systemctl --user enable --now alertmanager.service
 loginctl enable-linger
 systemctl --user status --full alertmanager.service
 google-chrome http://localhost:9093
+
