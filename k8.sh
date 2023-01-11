@@ -239,13 +239,13 @@ cat <<EOF | tee ~/.config/systemd/user/kube-proxy.service
 [Unit]
 Description=Kubernetes API Proxy Server
 Documentation=https://kubernetes.io/docs/tasks/extend-kubernetes/http-proxy-access-api/
-After=network.target
+Wants=network-online.target
+After=network-online.targe
 
 [Service]
 Restart=on-failure
-RestartSec=30
-FailureAction=exit-force
-ExecStart=/usr/local/bin/kubectl proxy
+TimeoutStopSec=30
+ExecStart=kubectl proxy
 LimitNOFILE=65536
 
 [Install]
@@ -275,12 +275,12 @@ cat <<EOF | tee ~/.config/systemd/user/grafana.service
 [Unit]
 Description=Grafana
 Documentation=https://github.com/prometheus-operator/kube-prometheus
-After=network.target
+Wants=network-online.target
+After=network-online.targe
 
 [Service]
 Restart=on-failure
-RestartSec=30
-FailureAction=exit-force
+TimeoutStopSec=30
 ExecStart=kubectl --namespace monitoring port-forward svc/grafana 3000
 LimitNOFILE=65536
 
@@ -298,12 +298,12 @@ cat <<EOF | tee ~/.config/systemd/user/prometheus.service
 [Unit]
 Description=Prometheus
 Documentation=https://github.com/prometheus-operator/kube-prometheus
-After=network.target
+Wants=network-online.target
+After=network-online.targe
 
 [Service]
 Restart=on-failure
-RestartSec=30
-FailureAction=exit-force
+TimeoutStopSec=30
 ExecStart=kubectl --namespace monitoring port-forward svc/prometheus-k8s 9090
 LimitNOFILE=65536
 
@@ -321,12 +321,12 @@ cat <<EOF | tee ~/.config/systemd/user/alertmanager.service
 [Unit]
 Description=Alert Manager
 Documentation=https://github.com/prometheus-operator/kube-prometheus
-After=network.target
+Wants=network-online.target
+After=network-online.targe
 
 [Service]
 Restart=on-failure
-RestartSec=30
-FailureAction=exit-force
+TimeoutStopSec=30
 ExecStart=kubectl --namespace monitoring port-forward svc/alertmanager-main 9093
 LimitNOFILE=65536
 
@@ -338,4 +338,3 @@ systemctl --user enable --now alertmanager.service
 loginctl enable-linger
 systemctl --user status --full alertmanager.service
 google-chrome http://localhost:9093
-
