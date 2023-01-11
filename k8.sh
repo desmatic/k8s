@@ -9,7 +9,7 @@ set -ex
 
 ### environment configuration
 NET_DOMAIN=${NET_DOMAIN:-"localdomain"}
-NET_HOSTNAME=${NET_HOSTNAME:-"k8-ctrl1"}
+NET_HOSTNAME=${NET_HOSTNAME:-"k8-single"}
 NET_API_HOSTNAME=${NET_API_HOSTNAME:-"api"}
 NET_API_IP=${NET_API_IP:-$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"src") print $(nn+1) }' | cut -d '.' -f1-3).101}
 NET_API_IF=${NET_API_IF:-$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"dev") print $(nn+1) }')}
@@ -138,6 +138,7 @@ helm completion bash | sudo tee /etc/bash_completion.d/helm
 helm repo add openebs https://openebs.github.io/charts
 helm repo update
 helm install openebs --namespace openebs openebs/openebs --create-namespace
+while [ ! -d /var/openebs ]; do echo waiting for openebs dir to be created; sleep 5; done
 
 ### openebs lvm storage
 sudo truncate -s 1024G /var/openebs/lvmvg.img
@@ -243,6 +244,7 @@ After=network.target
 [Service]
 Restart=on-failure
 RestartSec=30
+FailureAction=exit-force
 ExecStart=/usr/local/bin/kubectl proxy
 LimitNOFILE=65536
 
@@ -256,11 +258,19 @@ systemctl --user status --full kube-proxy.service
 kubectl -n kubernetes-dashboard create token admin-user
 google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 
-# install kube prometheus
+### install kube prometheus
 git clone https://github.com/prometheus-operator/kube-prometheus.git
 cd kube-prometheus
-kubectl create -f manifests/setup
-kubectl create -f manifests/
+kubectl apply --server-side -f manifests/setup
+kubectl wait \
+	--for condition=Established \
+	--all CustomResourceDefinition \
+	--namespace=monitoring
+kubectl apply -f manifests/
+cd -
+
+# access grafana ui
+mkdir -p ~/.config/systemd/user/
 cat <<EOF | tee ~/.config/systemd/user/grafana.service
 [Unit]
 Description=Grafana
@@ -270,6 +280,7 @@ After=network.target
 [Service]
 Restart=on-failure
 RestartSec=30
+FailureAction=exit-force
 ExecStart=kubectl --namespace monitoring port-forward svc/grafana 3000
 LimitNOFILE=65536
 
@@ -280,3 +291,51 @@ systemctl --user daemon-reload
 systemctl --user enable --now grafana.service
 loginctl enable-linger
 systemctl --user status --full grafana.service
+google-chrome http://localhost:3000/ # username: admin, password: admin
+
+# access prometheus ui
+cat <<EOF | tee ~/.config/systemd/user/prometheus.service
+[Unit]
+Description=Prometheus
+Documentation=https://github.com/prometheus-operator/kube-prometheus
+After=network.target
+
+[Service]
+Restart=on-failure
+RestartSec=30
+FailureAction=exit-force
+ExecStart=kubectl --namespace monitoring port-forward svc/prometheus-k8s 9090
+LimitNOFILE=65536
+
+[Install]
+WantedBy=default.target
+EOF
+systemctl --user daemon-reload
+systemctl --user enable --now prometheus.service
+loginctl enable-linger
+systemctl --user status --full prometheus.service
+google-chrome http://localhost:9090/
+
+# access alert manager ui
+cat <<EOF | tee ~/.config/systemd/user/alertmanager.service
+[Unit]
+Description=Alert Manager
+Documentation=https://github.com/prometheus-operator/kube-prometheus
+After=network.target
+
+[Service]
+Restart=on-failure
+RestartSec=30
+FailureAction=exit-force
+ExecStart=kubectl --namespace monitoring port-forward svc/alertmanager-main 9093
+LimitNOFILE=65536
+
+[Install]
+WantedBy=default.target
+EOF
+systemctl --user daemon-reload
+systemctl --user enable --now alertmanager.service
+loginctl enable-linger
+systemctl --user status --full alertmanager.service
+google-chrome http://localhost:9093
+
