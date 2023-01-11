@@ -1,4 +1,13 @@
 set -ex
+
+### UI access to k8 API
+#
+# kube proxy runs on localhost, so for remote systems use ssh tunnels
+# ssh -v -N appusr@appserver -J myusr@jumphost -L 6443:${NET_API_HOSTNAME}:6443
+#
+###########
+
+### environment configuration
 NET_DOMAIN=${NET_DOMAIN:-"localdomain"}
 NET_HOSTNAME=${NET_HOSTNAME:-"k8-ctrl1"}
 NET_API_HOSTNAME=${NET_API_HOSTNAME:-"api"}
@@ -232,16 +241,42 @@ Documentation=https://kubernetes.io/docs/tasks/extend-kubernetes/http-proxy-acce
 After=network.target
 
 [Service]
-ExecStart=/usr/local/bin/kubectl proxy
 Restart=on-failure
+RestartSec=30
+ExecStart=/usr/local/bin/kubectl proxy
 LimitNOFILE=65536
 
 [Install]
 WantedBy=default.target
 EOF
-#ssh -v -N appusr@appserver -J myusr@jumphost -L 6443:${NET_API_HOSTNAME}:6443
+systemctl --user daemon-reload
 systemctl --user enable --now kube-proxy.service
 loginctl enable-linger
-systemctl --user status --full kube-proxy.Service
+systemctl --user status --full kube-proxy.service
 kubectl -n kubernetes-dashboard create token admin-user
 google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+
+# install kube prometheus
+git clone https://github.com/prometheus-operator/kube-prometheus.git
+cd kube-prometheus
+kubectl create -f manifests/setup
+kubectl create -f manifests/
+cat <<EOF | tee ~/.config/systemd/user/grafana.service
+[Unit]
+Description=Grafana
+Documentation=https://github.com/prometheus-operator/kube-prometheus
+After=network.target
+
+[Service]
+Restart=on-failure
+RestartSec=30
+ExecStart=kubectl --namespace monitoring port-forward svc/grafana 3000
+LimitNOFILE=65536
+
+[Install]
+WantedBy=default.target
+EOF
+systemctl --user daemon-reload
+systemctl --user enable --now grafana.service
+loginctl enable-linger
+systemctl --user status --full grafana.service
