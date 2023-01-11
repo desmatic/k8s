@@ -240,7 +240,7 @@ cat <<EOF | tee ~/.config/systemd/user/kube-proxy.service
 Description=Kubernetes API Proxy Server
 Documentation=https://kubernetes.io/docs/tasks/extend-kubernetes/http-proxy-access-api/
 Wants=network-online.target
-After=network-online.targe
+After=network-online.target
 
 [Service]
 Restart=on-failure
@@ -276,7 +276,7 @@ cat <<EOF | tee ~/.config/systemd/user/grafana.service
 Description=Grafana
 Documentation=https://github.com/prometheus-operator/kube-prometheus
 Wants=network-online.target
-After=network-online.targe
+After=network-online.target
 
 [Service]
 Restart=on-failure
@@ -299,7 +299,7 @@ cat <<EOF | tee ~/.config/systemd/user/prometheus.service
 Description=Prometheus
 Documentation=https://github.com/prometheus-operator/kube-prometheus
 Wants=network-online.target
-After=network-online.targe
+After=network-online.target
 
 [Service]
 Restart=on-failure
@@ -322,7 +322,7 @@ cat <<EOF | tee ~/.config/systemd/user/alertmanager.service
 Description=Alert Manager
 Documentation=https://github.com/prometheus-operator/kube-prometheus
 Wants=network-online.target
-After=network-online.targe
+After=network-online.target
 
 [Service]
 Restart=on-failure
