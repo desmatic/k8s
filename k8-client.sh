@@ -39,9 +39,9 @@ systemctl --user enable --now kube-proxy.service
 loginctl enable-linger
 systemctl --user status --full kube-proxy.service
 kubectl -n kubernetes-dashboard create token admin-user
-# google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
 
-# access grafana ui
+### access grafana ui
 mkdir -p ~/.config/systemd/user/
 cat <<EOF | tee ~/.config/systemd/user/grafana.service
 [Unit]
@@ -63,9 +63,9 @@ systemctl --user daemon-reload
 systemctl --user enable --now grafana.service
 loginctl enable-linger
 systemctl --user status --full grafana.service
-# google-chrome http://localhost:3000/ # username: admin, password: admin
+google-chrome http://localhost:3000/ # username: admin, password: admin
 
-# access prometheus ui
+### access prometheus ui
 cat <<EOF | tee ~/.config/systemd/user/prometheus.service
 [Unit]
 Description=Prometheus
@@ -86,9 +86,9 @@ systemctl --user daemon-reload
 systemctl --user enable --now prometheus.service
 loginctl enable-linger
 systemctl --user status --full prometheus.service
-# google-chrome http://localhost:9090/
+google-chrome http://localhost:9090/
 
-# access alert manager ui
+### access alert manager ui
 cat <<EOF | tee ~/.config/systemd/user/alertmanager.service
 [Unit]
 Description=Alert Manager
@@ -109,5 +109,5 @@ systemctl --user daemon-reload
 systemctl --user enable --now alertmanager.service
 loginctl enable-linger
 systemctl --user status --full alertmanager.service
-# google-chrome http://localhost:9093
+google-chrome http://localhost:9093
 
