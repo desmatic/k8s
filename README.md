@@ -2,6 +2,12 @@
 
 You can run the k8-debian-ubuntu.sh install script locally or setup a remote target. The target requires a passwordless sudo user, e.g. ubuntu on ec2.
 
+### local install
+```bash
+NET_DOMAIN=mydomainname NET_HOSTNAME=myhostname ./k8-debian-ubuntu.sh
+```
+
+### jumpbox install
 ```bash
 # setup local environment file and configure target NET_API_IP and NET_JUMPHOST
 cp env.local.k8 .env.local.k8
