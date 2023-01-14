@@ -31,9 +31,6 @@ source .env.local.k8
 echo "127.0.0.1 ${NET_API_HOSTNAME}" | sudo tee -a /etc/hosts
 
 # install kubectl and chrome on your local host and run
-./k8-api-tunnel.sh
-
-# install kubectl and chrome on your local host and run
 ./k8-client-remote.sh
 
 # systemd user start,stop,restart,status for proxies
