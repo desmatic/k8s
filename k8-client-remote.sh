@@ -2,7 +2,6 @@ set -ex
 
 ### Client k8 UI and API access using ssh tunnel
 #
-# source .env.local.k8
 # ssh -A -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_API_IP} -L 6443:${NET_API_HOSTNAME}:6443
 #
 ###############################################################################
@@ -15,7 +14,7 @@ export SYSTEMD_PAGER=
 
 ### configure access
 mkdir -p $HOME/.kube
-scp -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_API_IP}:~/.kube/config $HOME/.kube/config
+scp -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_HOSTIP}:~/.kube/config $HOME/.kube/config
 sed -i "s@^\(\s*server:\s*https://\)\(.*\):\(.*\)@\1${NET_API_HOSTNAME}:\3@" $HOME/.kube/config
 
 ### ssh api tunnel
@@ -30,7 +29,7 @@ After=network-online.target
 Restart=on-failure
 TimeoutStopSec=30
 RestartSec=90
-ExecStart=ssh -N -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_API_IP} -L 6443:${NET_API_HOSTNAME}:6443
+ExecStart=ssh -N -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_HOSTIP} -L 6443:${NET_API_HOSTNAME}:6443
 LimitNOFILE=65536
 
 [Install]
@@ -38,6 +37,7 @@ WantedBy=default.target
 EOF
 systemctl --user daemon-reload
 systemctl --user enable --now k8-api-tunnel.service
+systemctl --user restart k8-api-tunnel.service
 loginctl enable-linger
 systemctl --user status --full k8-api-tunnel.service
 

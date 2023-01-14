@@ -27,9 +27,9 @@ WantedBy=default.target
 EOF
 systemctl --user daemon-reload
 systemctl --user enable --now kube-proxy.service
+systemctl --user restart kube-proxy.service
 loginctl enable-linger
 systemctl --user status --full kube-proxy.service
-kubectl -n kubernetes-dashboard create token admin-user
 google-chrome http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/ || echo "skipping browser" &
 
 ### access grafana ui
@@ -53,6 +53,7 @@ WantedBy=default.target
 EOF
 systemctl --user daemon-reload
 systemctl --user enable --now grafana.service
+systemctl --user restart grafana.service
 loginctl enable-linger
 systemctl --user status --full grafana.service
 google-chrome http://localhost:3000/  || echo "skipping browser" & # username: admin, password: admin
@@ -77,6 +78,7 @@ WantedBy=default.target
 EOF
 systemctl --user daemon-reload
 systemctl --user enable --now prometheus.service
+systemctl --user restart prometheus.service
 loginctl enable-linger
 systemctl --user status --full prometheus.service
 google-chrome http://localhost:9090/  || echo "skipping browser" &
@@ -101,6 +103,10 @@ WantedBy=default.target
 EOF
 systemctl --user daemon-reload
 systemctl --user enable --now alertmanager.service
+systemctl --user restart alertmanager.service
 loginctl enable-linger
 systemctl --user status --full alertmanager.service
 google-chrome http://localhost:9093 || echo "skipping browser" &
+
+### generate k8 dashboard token
+kubectl -n kubernetes-dashboard create token admin-user

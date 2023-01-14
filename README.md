@@ -24,7 +24,7 @@ vi .env.local.k8
 
 # install k8 on remote target through jumpbox
 source .env.local.k8
-cat .env.local.k8 k8-debian-ubuntu.sh | ssh -A -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_API_IP} 'bash -s'
+cat .env.local.k8 k8-debian-ubuntu.sh | ssh -A -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_HOSTIP} 'bash -s'
 
 # add localhost alias for k8 api to local hosts file
 source .env.local.k8
