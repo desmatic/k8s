@@ -21,10 +21,6 @@ cat .env.local.k8 k8-debian-ubuntu.sh | ssh -A -J ${NET_JUMPHOST_USER}@${NET_JUM
 source .env.local.k8
 echo "127.0.0.1 ${NET_API_HOSTNAME}" | sudo tee -a /etc/hosts
 
-# start k8 api tunnel to remote target
-source .env.local.k8
-ssh -A -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_API_IP} -L 6443:${NET_API_HOSTNAME}:6443
-
-# on a separate local terminal, install k8 client
+# install kubectl and chrome on your localmachine and run
 ./k8-client.sh
 ````
