@@ -23,4 +23,11 @@ echo "127.0.0.1 ${NET_API_HOSTNAME}" | sudo tee -a /etc/hosts
 
 # install kubectl and chrome on your local host and run
 ./k8-client.sh
+
+# systemd user start,stop,restart,status for proxies
+systemctl --user status k8-api-tunnel.service
+systemctl --user status kube-proxy.service
+systemctl --user status grafana.service
+systemctl --user status prometheus.service
+systemctl --user status alertmanager.service
 ````
