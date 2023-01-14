@@ -1,5 +1,11 @@
 set -ex
 
+### run install script on remote target through jumpbox
+#
+# cat .env.local.k8 k8-debian-ubuntu.sh | ssh -A -J myusr@jumphost appusr@${NET_DOMAIN}.${NET_HOSTNAME} 'bash -s'
+#
+###############################################################################
+
 ### environment configuration
 NET_DOMAIN=${NET_DOMAIN:-"localdomain"}
 NET_HOSTNAME=${NET_HOSTNAME:-"k8-single"}
@@ -131,7 +137,7 @@ helm completion bash | sudo tee /etc/bash_completion.d/helm
 ### install openebs
 helm repo add openebs https://openebs.github.io/charts
 helm repo update
-helm install openebs --namespace openebs openebs/openebs --create-namespace
+helm install openebs openebs/openebs --create-namespace --namespace openebs
 while [ ! -d /var/openebs ]; do echo waiting for openebs dir to be created; sleep 5; done
 
 ### openebs lvm storage
@@ -208,7 +214,7 @@ EOF
 ### install loki
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
-helm install loki grafana/loki-stack --namespace loki
+helm install loki grafana/loki-stack --create-namespace --namespace loki
 
 ### install kube prometheus
 git clone https://github.com/prometheus-operator/kube-prometheus.git
