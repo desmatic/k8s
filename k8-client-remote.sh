@@ -2,7 +2,7 @@ set -ex
 
 ### Client k8 UI and API access using ssh tunnel
 #
-# ssh -A -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_API_IP} -L 6443:${NET_API_HOSTNAME}:6443
+# ssh -A -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_HOST_USER}@${NET_HOST} -L 6443:${NET_API_HOSTNAME}:6443
 #
 ###############################################################################
 
@@ -12,9 +12,15 @@ if [ -f .env.local.k8 ]; then source .env.local.k8; fi
 ### turn off systemd pager
 export SYSTEMD_PAGER=
 
+### if jump host defined, add ssh jump host
+SSH_JUMP=""
+if [ ! -z "${NET_JUMPHOST}" ]; then
+    SSH_JUMP="-J ${NET_JUMPHOST_USER}@${NET_JUMPHOST}"
+fi
+
 ### configure access
 mkdir -p $HOME/.kube
-scp -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_HOSTIP}:~/.kube/config $HOME/.kube/config
+scp ${SSH_JUMP} ${NET_API_HOSTNAME_USER}@${NET_HOST}:~/.kube/config $HOME/.kube/config
 sed -i "s@^\(\s*server:\s*https://\)\(.*\):\(.*\)@\1${NET_API_HOSTNAME}:\3@" $HOME/.kube/config
 
 ### ssh api tunnel
@@ -29,7 +35,7 @@ After=network-online.target
 Restart=on-failure
 TimeoutStopSec=30
 RestartSec=90
-ExecStart=ssh -N -J ${NET_JUMPHOST_USER}@${NET_JUMPHOST} ${NET_API_HOSTNAME_USER}@${NET_HOSTIP} -L 6443:${NET_API_HOSTNAME}:6443
+ExecStart=ssh -N ${SSH_JUMP} ${NET_HOST_USER}@${NET_HOST} -L 6443:${NET_API_HOSTNAME}:6443
 LimitNOFILE=65536
 
 [Install]
