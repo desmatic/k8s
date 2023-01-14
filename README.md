@@ -4,7 +4,16 @@ You can run the k8-debian-ubuntu.sh install script locally or setup a remote tar
 
 ### local install
 ```bash
-NET_DOMAIN=mydomainname NET_HOSTNAME=myhostname ./k8-debian-ubuntu.sh
+
+# install k8
+export NET_DOMAIN=mydomainname NET_HOSTNAME=myhostname
+./k8-debian-ubuntu.sh && ./k8-client.sh
+
+# systemd user start,stop,restart,status for proxies
+systemctl --user status kube-proxy.service
+systemctl --user status grafana.service
+systemctl --user status prometheus.service
+systemctl --user status alertmanager.service
 ```
 
 ### jumpbox install
@@ -22,7 +31,10 @@ source .env.local.k8
 echo "127.0.0.1 ${NET_API_HOSTNAME}" | sudo tee -a /etc/hosts
 
 # install kubectl and chrome on your local host and run
-./k8-client.sh
+./k8-api-tunnel.sh
+
+# install kubectl and chrome on your local host and run
+./k8-client-remote.sh
 
 # systemd user start,stop,restart,status for proxies
 systemctl --user status k8-api-tunnel.service
