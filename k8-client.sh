@@ -45,7 +45,7 @@ After=network-online.target
 Restart=on-failure
 TimeoutStopSec=30
 RestartSec=90
-ExecStart=kubectl --namespace monitoring port-forward svc/grafana 9097
+ExecStart=kubectl --namespace monitoring port-forward svc/grafana 9097:3000
 LimitNOFILE=65536
 
 [Install]
@@ -56,7 +56,7 @@ systemctl --user enable --now grafana.service
 systemctl --user restart grafana.service
 loginctl enable-linger
 systemctl --user status --full grafana.service
-google-chrome http://localhost:3000/  || echo "skipping browser" & # username: admin, password: admin
+google-chrome http://localhost:9097  || echo "skipping browser" & # username: admin, password: admin
 
 ### access prometheus ui
 cat <<EOF | tee ~/.config/systemd/user/prometheus.service

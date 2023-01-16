@@ -33,9 +33,9 @@ systemctl --user status k8-api-tunnel.service
 
 ### systemd user start,stop,restart,status for client proxies
 ```bash
-systemctl --user status kube-proxy.service
-systemctl --user status grafana.service
-systemctl --user status prometheus.service
-systemctl --user status alertmanager.service
-systemctl --user status argocd.service
+systemctl --user status kube-proxy.service          # http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/
+systemctl --user status grafana.service             # http://localhost:9097
+systemctl --user status prometheus.service          # http://localhost:9090
+systemctl --user status alertmanager.service        # http://localhost:9093
+systemctl --user status argocd.service              # https://localhost:9095
 ```
