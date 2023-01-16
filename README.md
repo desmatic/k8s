@@ -28,7 +28,7 @@ echo "127.0.0.1 ${NET_API_HOSTNAME}" | sudo tee -a /etc/hosts
 ./k8-client-remote.sh
 
 ### systemd user start,stop,restart,status for ssh tunnel
-systemctl --user status k8-api-tunnel.service
+systemctl --user status k8-api-tunnel.service       # http://localhost:6443
 ````
 
 ### systemd user start,stop,restart,status for client proxies
