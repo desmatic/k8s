@@ -137,4 +137,5 @@ google-chrome https://localhost:9095 || echo "skipping browser" &
 kubectl -n kubernetes-dashboard create token admin-user
 
 ###
+echo "argocd user: admin"
 echo "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d"
