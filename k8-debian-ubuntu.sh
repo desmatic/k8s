@@ -130,8 +130,8 @@ sudo chown $(id -u):$(id -g) $HOME/.kube/config
 kubectl taint nodes --all node-role.kubernetes.io/control-plane:NoSchedule-
 
 ### install network plugin
-kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
-#kubectl apply -f https://projectcalico.docs.tigera.io/manifests/calico.yam
+#kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+kubectl apply -f https://projectcalico.docs.tigera.io/manifests/calico.yaml
 
 ### install helm
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
@@ -218,6 +218,11 @@ spec:
     persistentVolumeClaim:
       claimName: csi-lvmpv
 EOF
+
+### install nginx ingress controller
+helm upgrade --install ingress-nginx ingress-nginx \
+  --repo https://kubernetes.github.io/ingress-nginx \
+  --namespace ingress-nginx --create-namespace
 
 ### install loki
 helm repo add grafana https://grafana.github.io/helm-charts
