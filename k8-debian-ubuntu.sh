@@ -240,6 +240,11 @@ kubectl wait \
 kubectl apply -f manifests/
 cd -
 
+### install argo cd
+helm repo add argocd https://argoproj.github.io/argo-helm
+helm repo update
+helm install argocd argocd/argo-cd --namespace=argocd  --create-namespace
+
 ### ui dashboard
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.7.0/aio/deploy/recommended.yaml
 cat <<EOF | kubectl apply -f -

@@ -45,7 +45,7 @@ After=network-online.target
 Restart=on-failure
 TimeoutStopSec=30
 RestartSec=90
-ExecStart=kubectl --namespace monitoring port-forward svc/grafana 3000
+ExecStart=kubectl --namespace monitoring port-forward svc/grafana 9097
 LimitNOFILE=65536
 
 [Install]
@@ -108,5 +108,33 @@ loginctl enable-linger
 systemctl --user status --full alertmanager.service
 google-chrome http://localhost:9093 || echo "skipping browser" &
 
+### access argocd
+cat <<EOF | tee ~/.config/systemd/user/argocd.service
+[Unit]
+Description=Argo CD
+Documentation=https://argo-cd.readthedocs.io/en/stable/getting_started/
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Restart=on-failure
+TimeoutStopSec=30
+RestartSec=90
+ExecStart=kubectl --namespace argocd port-forward svc/argocd-server 9095:443
+LimitNOFILE=65536
+
+[Install]
+WantedBy=default.target
+EOF
+systemctl --user daemon-reload
+systemctl --user enable --now argocd.service
+systemctl --user restart argocd.service
+loginctl enable-linger
+systemctl --user status --full argocd.service
+google-chrome https://localhost:9095 || echo "skipping browser" &
+
 ### generate k8 dashboard token
 kubectl -n kubernetes-dashboard create token admin-user
+
+###
+echo "kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d"
