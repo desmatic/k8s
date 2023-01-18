@@ -67,14 +67,26 @@ echo "$(ip route get 8.8.8.8 | awk '{ for (nn=1;nn<=NF;nn++) if ($nn~"src") prin
 cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
 overlay
 br_netfilter
+ip6table_mangle
+ip6table_nat
+ip6table_raw
+iptable_mangle
+iptable_nat
+iptable_raw
+xt_REDIRECT
+xt_connmark
+xt_conntrack
+xt_mark
+xt_owner
+xt_tcpudp
 dm-snapshot
 EOF
+sudo modprobe -a $(cat /etc/modules-load.d/k8s.conf)
 cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
 net.bridge.bridge-nf-call-iptables  = 1
 net.bridge.bridge-nf-call-ip6tables = 1
 net.ipv4.ip_forward                 = 1
 EOF
-sudo modprobe -a overlay br_netfilter dm-snapshot
 sudo sysctl --system
 
 ### install containerd
@@ -145,8 +157,7 @@ helm completion bash | sudo tee /etc/bash_completion.d/helm
 ### install openebs
 helm repo add openebs https://openebs.github.io/charts
 helm repo update
-helm install openebs openebs/openebs --create-namespace --namespace openebs
-while [ ! -d /var/openebs ]; do echo waiting for openebs dir to be created; sleep 5; done
+helm install openebs openebs/openebs --create-namespace --namespace openebs --wait
 
 ### openebs lvm storage
 sudo truncate -s 1024G /var/openebs/lvmvg.img
@@ -219,26 +230,45 @@ spec:
       claimName: csi-lvmpv
 EOF
 
-### install nginx ingress controller
-helm upgrade --install ingress-nginx ingress-nginx \
-  --repo https://kubernetes.github.io/ingress-nginx \
-  --namespace ingress-nginx --create-namespace
+### install istio
+helm repo add istio https://istio-release.storage.googleapis.com/charts
+helm repo update
+helm install istio-base istio/base --namespace istio-system --create-namespace --wait
+helm install istiod istio/istiod --namespace istio-system --wait
+
+### install metallb
+cat <<EOF | kubectl apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  labels:
+    pod-security.kubernetes.io/audit: privileged
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: privileged
+  name: metallb-system
+EOF
+helm repo add metallb https://metallb.github.io/metallb
+helm repo update
+helm install metallb metallb/metallb --namespace metallb-system --wait
 
 ### install loki
 helm repo add grafana https://grafana.github.io/helm-charts
 helm repo update
 helm install loki grafana/loki-stack --create-namespace --namespace loki --wait
 
-### install kube prometheus
-git clone https://github.com/prometheus-operator/kube-prometheus.git
-cd kube-prometheus
-kubectl apply --server-side -f manifests/setup
-kubectl wait \
-	--for condition=Established \
-	--all CustomResourceDefinition \
-	--namespace=monitoring
-kubectl apply -f manifests/
-cd -
+### install grafana
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.16/samples/addons/grafana.yaml
+
+### install prometheus
+kubectl apply -f https://raw.githubusercontent.com/istio/istio/release-1.16/samples/addons/prometheus.yaml
+
+### install kaili
+helm install \
+  --namespace istio-system \
+  --set auth.strategy="anonymous" \
+  --repo https://kiali.org/helm-charts \
+  kiali-server \
+  kiali-server
 
 ### install argo cd
 helm repo add argocd https://argoproj.github.io/argo-helm
